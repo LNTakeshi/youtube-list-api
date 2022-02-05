@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ja-JP">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <title>Laravel</title>
+
+        <!-- Fonts -->
+        <link href="https://fonts.googleapis.com/css?family=Nunito:200,600" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+        <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/locale/ja.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+        <!-- Styles -->
+        <style>
+            html, body {
+                background-color: #fff;
+                color: #636b6f;
+                font-family: 'Nunito', sans-serif;
+                font-weight: 200;
+                margin: 0;
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+            }
+
+
+
+            .flex-center {
+                align-items: center;
+                display: flex;
+                justify-content: center;
+                margin-bottom: 10px;
+                margin-top: 10px;
+            }
+
+
+            .top-right {
+                position: absolute;
+                right: 10px;
+                top: 18px;
+            }
+
+            .content {
+                text-align: center;
+            }
+
+            .title {
+                font-size: 84px;
+            }
+
+            .links > a {
+                color: #636b6f;
+                padding: 0 25px;
+                font-size: 13px;
+                font-weight: 600;
+                letter-spacing: .1rem;
+                text-decoration: none;
+                text-transform: uppercase;
+            }
+
+            .m-b-md {
+                margin-bottom: 30px;
+            }
+
+            .body-table{
+                overflow-y: scroll;
+                display:grid;
+            }
+
+            .center-text{
+                text-align: center;
+            }
+
+            .left-text{
+                text-align: left;
+            }
+
+            .invisible{
+                display: none;
+            }
+
+            .current-playing{
+                background-color: #b3e5fc;
+            }
+
+            .deleted{
+                background-color: #999999;
+            }
+
+            .td-name > *:nth-last-child(2){
+                margin-right: 3px;
+            }
+
+            input[type="text"] {
+                font-size: 16px;
+            }
+            input[type="text"]::placeholder {
+                font-size: 12px;
+            }
+            .submit-td{
+                text-align: left;
+            }
+
+        </style>
+    </head>
+    <body>
+        <div class="header-form">
+            <div class="flex-center invisible" id="masterIdView" >
+                アプリ入力用キー:<input type="text" id="masterIdText" readonly/> <input type="submit" id="copy-button" value="コピー" />
+            </div>
+            <div class="flex-center">
+                <a href="/">トップに戻る</a>
+            </div>
+            <div class="flex-center">
+                <form method="GET" onsubmit="return false;">
+                    <table>
+                    <tr><td><label>ユーザー名(任意)</label></td><td colspan="3"><input id="username" type="text" maxlength="30"/></td></tr>
+                    <tr><td><label>URL</label></td><td colspan="3"><input id="url" type="text" placeholder="youtube/niconico/soundcloud/twitter"/></td></tr>
+                    <tr><td><label>カスタムタイトル</label></td><td colspan="3"><input id="title" type="text" placeholder="空欄の場合はURLから取得" /></td></tr>
+                    <tr><td><label>start</label></td><td><input id="start" type="time" placeholder="未指定の場合は空欄" class="me-5" step="1" value="00:00:00" required></td><td><label>end</label></td><td class="text-end"><input id="end" type="time" placeholder="未指定の場合は空欄" step="1" value="00:00:00" required/></td></tr>
+                    <tr><td></td><td class="submit-td" colspan="3"><input value="URL送信" id="submit-button" type="submit" class="btn btn-secondary btn-sm me-2"/><span id="timeDiff"></span></td></tr>
+                    </table>
+                </form>
+            </div>
+        </div>
+        <div class="body-table">
+            <table class="list-table">
+            </table>
+        </div>
+
+    </body>
+    <script>
+    let masterId = null;
+    let calctime = moment();
+$(()=>{
+    masterId = $.cookie("master-id-" + "{{ .RoomID }}");
+    $('#submit-button').click(()=>{send()});
+    setInterval(()=>{getList()}, 30000);
+    getList();
+    var cookies = document.cookie;
+    var cookiesArray = cookies.split(';');
+
+    if($.cookie("name") != null){
+        $('#username').val(decodeURIComponent($.cookie("name")));
+    }
+    $('#copy-button').click((e)=>{
+        var copyTarget = document.getElementById("masterIdText");
+        copyTarget.select();
+        document.execCommand("copy");
+
+    });
+
+    $(document).on("click", ".delete-button", function (event) {
+
+        if(!sending){
+        sending = true;
+        $('input').prop("disabled", true);
+
+        $.post(
+                '/api/youtubelist/remove',
+                {
+                    'room_id': '{{ .RoomID }}',
+                    'index': $(event.currentTarget).data('id'),
+                    'uuid': $.cookie("uuid"),
+                    'master_id': masterId,
+                },
+            ).done(function(data, textStatus, jqXHR){
+                getList();
+            }).fail(function(jqXHR, textStatus, errorThrown){
+                if(jqXHR.responseJSON == undefined){
+                    alert("不明なエラー");
+                    return;
+                }
+                alert(jqXHR.responseJSON.error);
+            }).always(function(){
+                sending = false;
+                $('input').prop("disabled", false);
+            });
+
+        }
+    });
+
+});
+let sending = false;
+function send(){
+    if(!sending){
+        sending = true;
+        $('input').prop("disabled", true);
+
+        $.post(
+                '/api/youtubelist/send',
+                {
+                    'url': $('#url').val(),
+                    'room_id': '{{ .RoomID }}',
+                    'username': $('#username').val(),
+                    'title': $('#title').val(),
+                    'uuid': $.cookie("uuid"),
+                    'start': $('#start').val(),
+                    'end': $('#end').val(),
+                },
+            ).done(function(data, textStatus, jqXHR){
+                getList();
+                $('#url').val('');
+                $('#title').val('');
+                $('#start').val('00:00:00');
+                $('#end').val('00:00:00');
+            }).fail(function(jqXHR, textStatus, errorThrown){
+                if(jqXHR.responseJSON == undefined){
+                    alert("不明なエラー");
+                    return;
+                }
+                alert(jqXHR.responseJSON.error);
+            }).always(function(){
+                sending = false;
+                $('input').prop("disabled", false);
+            });
+
+        $.cookie("name", encodeURIComponent($('#username').val()) , { expires: 30 });
+    }
+}
+function escapeHtml (string) {
+  if(typeof string !== 'string') {
+    return string;
+  }
+  return string.replace(/[&'`"<>]/g, function(match) {
+    return {
+      '&': '&amp;',
+      "'": '&#x27;',
+      '`': '&#x60;',
+      '"': '&quot;',
+      '<': '&lt;',
+      '>': '&gt;',
+    }[match]
+  });
+}
+function getList(){
+
+    $.getJSON(
+        '/api/youtubelist/getList',
+        {
+            'room_id': '{{ .RoomID }}',
+            'uuid': ($.cookie("uuid") || ""),
+            'master_id': masterId,
+        },
+        (data)=>{
+            var $table = $('.list-table');
+            $table.empty();
+            $table.append('<tr><th>時刻</th><th>送信者</th><th>再生時間</th><th class="left-text">タイトル</th></tr>');
+            difftime = [0,0,0];
+            currentPlaying = false;
+            data.data.reverse();
+            $.each(data.data, (index, val) =>{
+                $table.append('<tr' + (data.info.currentIndex == (data.data.length - index - 1) ? ' class="current-playing"' : val['deleted'] ? ' class="deleted"' : '') + '>'
+                + '<td class="center-text">'+ val.time +'</td>'
+                + '<td class="center-text td-name"><span>' + (escapeHtml(val.username) || '未入力') + '</span>' + (val.removable ? '<input type="button" class="delete-button" value= "削除" data-id="' + (data.data.length - index - 1)  + '" />' : '') + '</td>'
+                + '<td class="center-text">' + val.length + '</td>'
+                + '<td><a href="'+ val.url +'" target="_blank">' + escapeHtml(val.title) + '</a></td>'
+                + '</tr>');
+                if(data.info.currentIndex == (data.data.length - index - 1)) {
+                    currentPlaying = true;
+                }
+                if(!val['deleted'] && !currentPlaying) {
+                    const times = val.length.split(':');
+                    difftime[0] = difftime[0] + parseInt(times[0], 10);
+                    difftime[1] = difftime[1] + parseInt(times[1], 10);
+                    difftime[2] = difftime[2] + parseInt(times[2], 10);
+                }
+            });
+            calctime = moment().add(difftime[0], 'hours').add(difftime[1], 'minutes').add(difftime[2], 'seconds');
+            $('#timeDiff').text("約" + calctime.diff(moment(), 'minutes') + "分後(" + calctime.format("DD日HH:mm頃") + ")");
+
+            if(data.privateInfo != null && data.privateInfo.masterId != null){
+                $('#masterIdView').removeClass("invisible");
+                $('#masterIdText').val(data.privateInfo.masterId);
+                $.cookie("master-id-" + "{{ .RoomID }}" , data.privateInfo.masterId, { expires: 2 });
+                masterId = data.privateInfo.masterId;
+            }
+            if(data.privateInfo != null && data.privateInfo.uuid != null){
+                $.cookie("uuid", data.privateInfo.uuid, { expires: 30 });
+            }
+        }
+    );
+}
+    </script>
+</html>
