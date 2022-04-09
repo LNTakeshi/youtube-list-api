@@ -5,6 +5,7 @@ import (
 	"youtubelist/util/log"
 
 	"cloud.google.com/go/firestore"
+	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/mux"
 )
 
@@ -16,20 +17,27 @@ type Usecase struct {
 type UsecaseBase struct {
 	FsCli *firestore.Client
 	Log   log.Logger
+	Redis *redis.Client
 }
 
-func RegisterUsecase(m *mux.Router, fsCli *firestore.Client, logger log.Logger) {
-	base := &UsecaseBase{FsCli: fsCli, Log: logger}
+func RegisterUsecase(m *mux.Router, fsCli *firestore.Client, logger log.Logger, rd *redis.Client) {
+	base := &UsecaseBase{FsCli: fsCli, Log: logger, Redis: rd}
 
 	usecaseList := make([]*Usecase, 0)
-	usecase := &Usecase{FuncName: "/api/youtubelist/getList", UsecaseBase: base}
+	usecase := &Usecase{FuncName: "/youtube-list/api/youtubelist/getList", UsecaseBase: base}
 	usecase.HandlerFunc = usecase.GetList
 	usecaseList = append(usecaseList, usecase)
-	usecase = &Usecase{FuncName: "/api/youtubelist/send", UsecaseBase: base}
+	usecase = &Usecase{FuncName: "/youtube-list/api/youtubelist/send", UsecaseBase: base}
 	usecase.HandlerFunc = usecase.Send
 	usecaseList = append(usecaseList, usecase)
-	usecase = &Usecase{FuncName: "/api/youtubelist/remove", UsecaseBase: base}
+	usecase = &Usecase{FuncName: "/youtube-list/api/youtubelist/remove", UsecaseBase: base}
 	usecase.HandlerFunc = usecase.Remove
+	usecaseList = append(usecaseList, usecase)
+	usecase = &Usecase{FuncName: "/youtube-list/api/youtubelist/setCurrentIndex", UsecaseBase: base}
+	usecase.HandlerFunc = usecase.SetCurrentIndex
+	usecaseList = append(usecaseList, usecase)
+	usecase = &Usecase{FuncName: "/youtube-list/api/youtubelist/sendError", UsecaseBase: base}
+	usecase.HandlerFunc = usecase.SendError
 	usecaseList = append(usecaseList, usecase)
 	for _, u := range usecaseList {
 		m.Handle(u.FuncName, u.HandlerFunc)

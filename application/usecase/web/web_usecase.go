@@ -29,6 +29,14 @@ func RegisterUsecase(m *mux.Router, fsCli *firestore.Client, logger log.Logger) 
 	usecase = &Usecase{FuncName: "/youtube-list/{RoomID}", UsecaseBase: base}
 	usecase.HandlerFunc = usecase.Room
 	usecaseList = append(usecaseList, usecase)
+
+	usecase = &Usecase{FuncName: "/", UsecaseBase: base}
+	usecase.HandlerFunc = usecase.Index
+	usecaseList = append(usecaseList, usecase)
+
+	usecase = &Usecase{FuncName: "/youtube-list/", UsecaseBase: base}
+	usecase.HandlerFunc = usecase.Index
+	usecaseList = append(usecaseList, usecase)
 	for _, u := range usecaseList {
 		m.Path(u.FuncName).HandlerFunc(u.HandlerFunc).Methods("GET")
 	}

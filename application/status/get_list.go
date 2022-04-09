@@ -24,19 +24,23 @@ type Data struct {
 }
 
 type PrivateInfo struct {
-	MasterID string `json:"masterId"`
-	UUID     string `json:"uuid"`
+	MasterID *string `json:"masterId"`
+	UUID     string  `json:"uuid"`
 }
 
 type Info struct {
-	CurrentIndex int
+	CurrentIndex int  `json:"currentIndex"`
+	NeedUpdate   bool `json:"needUpdate"`
 }
 
-func NewGetList(e *entity.GetList, uuid string) GetList {
+func NewGetList(e *entity.GetList, uuid string, lastUpdateDate time.Time) GetList {
+	if len(e.Data) > 0 && e.Data[len(e.Data)-1].Time.Before(lastUpdateDate) {
+		return GetList{Data: []Data{}, Info: NewInfo(e.Info, false)}
+	}
 	return GetList{
 		Data:        NewData(e, uuid),
 		PrivateInfo: NewPrivateInfo(e, uuid),
-		Info:        NewInfo(e.Info),
+		Info:        NewInfo(e.Info, true),
 	}
 }
 
@@ -64,10 +68,10 @@ func NewPrivateInfo(getList *entity.GetList, uuid string) PrivateInfo {
 	if !getList.IsMaster(uuid) {
 		return st
 	}
-	st.MasterID = getList.PrivateInfo.MasterID
+	st.MasterID = &getList.PrivateInfo.MasterID
 	return st
 }
 
-func NewInfo(e entity.Info) Info {
-	return Info{CurrentIndex: e.CurrentIndex}
+func NewInfo(e entity.Info, needUpdate bool) Info {
+	return Info{CurrentIndex: e.CurrentIndex, NeedUpdate: needUpdate}
 }

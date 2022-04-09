@@ -7,7 +7,7 @@ install:
 
 .PHONY: deploy
 deploy:
-	$(eval IMAGE := $(shell Set KO_DOCKER_REPO=gcr.io/youtube-list-app-276208/api&& ko publish registry/api/run/main.go))
+	$(eval IMAGE := $(shell Set KO_DOCKER_REPO=asia.gcr.io/youtube-list-app-276208/api&& ko publish registry/api/run/main.go))
 	gcloud run deploy api --image=$(IMAGE) --region asia-northeast1 --allow-unauthenticated --cpu=1
 
 .PHONY: deploy-linux

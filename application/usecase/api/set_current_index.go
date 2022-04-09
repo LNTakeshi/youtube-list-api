@@ -5,6 +5,7 @@ import (
 	"youtubelist/application/service"
 	"youtubelist/errors"
 
+	"github.com/glassonion1/logz"
 	"github.com/go-playground/validator"
 	"github.com/gorilla/schema"
 	"github.com/morikuni/failure"
@@ -31,6 +32,7 @@ func (u *Usecase) SetCurrentIndex(rw http.ResponseWriter, r *http.Request) {
 	args := &SetCurrentIndexArgs{}
 	decoder := schema.NewDecoder()
 	decoder.IgnoreUnknownKeys(true)
+	logz.Infof(ctx, "SetCurrentIndexFromUnityClient: %+v", r.Form)
 	if err := decoder.Decode(args, r.Form); err != nil {
 		Error{Error: "パースができない"}.WriteJSON(rw)
 		u.Log.Errorf(ctx, "%+v", failure.Wrap(err))
@@ -41,9 +43,9 @@ func (u *Usecase) SetCurrentIndex(rw http.ResponseWriter, r *http.Request) {
 		u.Log.Errorf(ctx, "%+v", failure.Wrap(err))
 		return
 	}
-	apiService := service.NewService(args.RoomID, args.MasterID, u.FsCli)
+	apiService := service.NewService(args.RoomID, args.MasterID, u.FsCli, u.Redis)
 
-	if err := apiService.Remove(ctx, args.Index); err != nil {
+	if err := apiService.SetCurrentIndex(ctx, args.Index); err != nil {
 		Error{Error: "削除できなかった"}.WriteJSON(rw)
 		u.Log.Errorf(ctx, "%+v", failure.Wrap(err))
 		return

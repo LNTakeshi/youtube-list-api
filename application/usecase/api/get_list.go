@@ -2,7 +2,9 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"time"
 	"youtubelist/application/service"
 	"youtubelist/application/status"
 	"youtubelist/errors"
@@ -12,9 +14,10 @@ import (
 )
 
 type GetListArgs struct {
-	RoomID   string
-	UUID     string
-	MasterID string
+	RoomID         string
+	UUID           string
+	MasterID       string
+	LastUpdateDate time.Time
 }
 
 func (u *Usecase) GetList(rw http.ResponseWriter, r *http.Request) {
@@ -44,8 +47,10 @@ func (u *Usecase) GetList(rw http.ResponseWriter, r *http.Request) {
 		args.UUID = uuid.NewString()
 	}
 	args.MasterID = r.Form.Get("master_id")
+	args.LastUpdateDate, _ = time.Parse(time.RFC3339, r.Form.Get("lastUpdateDate"))
+	fmt.Printf("aa:%+v", args.LastUpdateDate)
 
-	apiService := service.NewService(args.RoomID, args.UUID, u.FsCli)
+	apiService := service.NewService(args.RoomID, args.UUID, u.FsCli, u.Redis)
 
 	getList, uuid, err := apiService.GetRoom(ctx)
 	if err != nil {
@@ -55,7 +60,7 @@ func (u *Usecase) GetList(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	st := status.NewGetList(getList, uuid)
+	st := status.NewGetList(getList, uuid, args.LastUpdateDate)
 	res, err := json.Marshal(st)
 	if err != nil {
 		rw.WriteHeader(http.StatusInternalServerError)

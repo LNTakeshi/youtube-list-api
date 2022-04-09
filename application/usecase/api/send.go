@@ -76,6 +76,7 @@ func (u *Usecase) Send(rw http.ResponseWriter, r *http.Request) {
 		u.Log.Errorf(ctx, "%+v", failure.Wrap(err))
 		return
 	}
+	u.Log.Infof(ctx, "%+v", args)
 
 	url, urlType, err := constant.NewUrlType(args.Url)
 	if err != nil {
@@ -96,7 +97,7 @@ func (u *Usecase) Send(rw http.ResponseWriter, r *http.Request) {
 		fetchResult.Title = args.Title
 	}
 
-	s := service.NewService(args.RoomID, args.UUID, u.FsCli)
+	s := service.NewService(args.RoomID, args.UUID, u.FsCli, u.Redis)
 	err = s.Add(ctx, fetchResult, args.Username, args.Start, args.End)
 	if err != nil {
 		if failure.Is(err, errors.ErrInvalidTime) {

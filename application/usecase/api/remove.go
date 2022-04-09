@@ -41,7 +41,7 @@ func (u *Usecase) Remove(rw http.ResponseWriter, r *http.Request) {
 		u.Log.Errorf(ctx, "%+v", failure.Wrap(err))
 		return
 	}
-	apiService := service.NewService(args.RoomID, args.UUID, u.FsCli)
+	apiService := service.NewService(args.RoomID, args.UUID, u.FsCli, u.Redis)
 
 	if err := apiService.Remove(ctx, args.Index); err != nil {
 		Error{Error: "削除できなかった"}.WriteJSON(rw)

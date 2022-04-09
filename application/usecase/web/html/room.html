@@ -112,7 +112,10 @@
                 アプリ入力用キー:<input type="text" id="masterIdText" readonly/> <input type="submit" id="copy-button" value="コピー" />
             </div>
             <div class="flex-center">
-                <a href="/">トップに戻る</a>
+                <a href="/">TOPに戻る</a>
+            </div>
+            <div id="disable-text" class="flex-center" hidden>
+                しばらく投稿がなかったので読み込みを停止しています。ページ再読み込みかURL投稿することで再読込します。
             </div>
             <div class="flex-center">
                 <form method="GET" onsubmit="return false;">
@@ -135,6 +138,8 @@
     <script>
     let masterId = null;
     let calctime = moment();
+    let lastSendTime = moment();
+    let lastUpdateDate = moment("2000-01-01");
 $(()=>{
     masterId = $.cookie("master-id-" + "{{ .RoomID }}");
     $('#submit-button').click(()=>{send()});
@@ -160,7 +165,7 @@ $(()=>{
         $('input').prop("disabled", true);
 
         $.post(
-                '/api/youtubelist/remove',
+                '/youtube-list/api/youtubelist/remove',
                 {
                     'room_id': '{{ .RoomID }}',
                     'index': $(event.currentTarget).data('id'),
@@ -186,12 +191,14 @@ $(()=>{
 });
 let sending = false;
 function send(){
+    lastSendTime = moment();
+    $('#disable-text').prop("hidden", true);
     if(!sending){
         sending = true;
         $('input').prop("disabled", true);
 
         $.post(
-                '/api/youtubelist/send',
+                '/youtube-list/api/youtubelist/send',
                 {
                     'url': $('#url').val(),
                     'room_id': '{{ .RoomID }}',
@@ -237,16 +244,30 @@ function escapeHtml (string) {
   });
 }
 function getList(){
-
+    if (moment().diff(lastSendTime, 'hours') >= 1 && masterId == null){
+        $('#disable-text').prop("hidden", false);
+        return;
+    }
     $.getJSON(
-        '/api/youtubelist/getList',
+        '/youtube-list/api/youtubelist/getList',
         {
             'room_id': '{{ .RoomID }}',
             'uuid': ($.cookie("uuid") || ""),
             'master_id': masterId,
+            'lastUpdateDate': lastUpdateDate.format(),
         },
         (data)=>{
-            var $table = $('.list-table');
+            let $table = $('.list-table');
+            if (data.info.needUpdate == false) {
+                $table.each(function(idx, val){
+                    $(val).removeClass("current-playing");
+                    if (data.info.currentPlayingIndex == idx) {
+                        $(val).addClass("current-playing");
+                    }
+                });
+                return;
+            }
+            lastUpdateDate = moment();
             $table.empty();
             $table.append('<tr><th>時刻</th><th>送信者</th><th>再生時間</th><th class="left-text">タイトル</th></tr>');
             difftime = [0,0,0];

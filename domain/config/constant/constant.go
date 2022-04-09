@@ -8,6 +8,10 @@ import (
 )
 
 const YoutubeApiKey = "AIzaSyBgt6J1j38WWdBHRzWQmF65qbZk2ltEygw"
+const TWITTER_CLIENT_KEY = "grHV1oz4Y3zhznSmfxEdg"
+const TWITTER_CLIENT_SECRET = "BD6Fj3A2MHdcd13iblzUfzrYYsY3leysqhS2gDrSs"
+const TWITTER_CLIENT_ID_ACCESS_TOKEN = "63342875-Yc114gVRVyWsdz06FeGaI2frsjhN5gTdb3WvSpGAV"
+const TWITTER_CLIENT_ID_ACCESS_TOKEN_SECRET = "MSY3lnc095Vu2qH3R9WIOej6ayJbMEDdFnMT7p9VviE4I"
 
 type UrlType int
 
