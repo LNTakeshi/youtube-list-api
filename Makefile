@@ -17,3 +17,11 @@ deploy-linux:
 .PHONY: start
 start:
 	arelo go run ./registry/api/local/main.go
+
+.PHONY: npm-update
+npm-update:
+	cd react && npx npm-check-updates -u
+
+.PHONY: npm-install
+npm-install:
+	cd react && npm install

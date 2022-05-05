@@ -22,6 +22,9 @@ type GetListArgs struct {
 
 func (u *Usecase) GetList(rw http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	// rw.Header().Set("Access-Control-Allow-Headers", "*")
+	// rw.Header().Set("Access-Control-Allow-Origin", "*")
+	// rw.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 	if r.Method != http.MethodGet {
 		rw.WriteHeader(http.StatusBadRequest)
 		rw.Write([]byte("リクエストがおかしい"))

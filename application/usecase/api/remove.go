@@ -3,7 +3,6 @@ package api
 import (
 	"net/http"
 	"youtubelist/application/service"
-	"youtubelist/errors"
 
 	"github.com/go-playground/validator"
 	"github.com/gorilla/schema"
@@ -17,10 +16,13 @@ type RemoveArgs struct {
 }
 
 func (u *Usecase) Remove(rw http.ResponseWriter, r *http.Request) {
+	// rw.Header().Set("Access-Control-Allow-Headers", "*")
+	// rw.Header().Set("Access-Control-Allow-Origin", "*")
+	// rw.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+
 	ctx := r.Context()
 	if r.Method != http.MethodPost {
-		Error{Error: "リクエストがおかしい"}.WriteJSON(rw)
-		u.Log.Errorf(ctx, "%+v", failure.New(errors.ErrBadRequest))
+		Success{}.WriteJSON(rw)
 		return
 	}
 	if err := r.ParseForm(); err != nil {

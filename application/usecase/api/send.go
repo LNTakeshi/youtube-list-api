@@ -48,11 +48,16 @@ func (e Success) WriteJSON(rw http.ResponseWriter) {
 }
 
 func (u *Usecase) Send(rw http.ResponseWriter, r *http.Request) {
+	// rw.Header().Set("Access-Control-Allow-Headers", "*")
+	// rw.Header().Set("Access-Control-Allow-Origin", "*")
+	// rw.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+
 	rw.Header().Add("Content-Type", "application/json")
 	ctx := r.Context()
 	if r.Method != http.MethodPost {
-		Error{Error: "リクエストがおかしい"}.WriteJSON(rw)
-		u.Log.Errorf(ctx, "%+v", failure.New(errors.ErrBadRequest))
+		Success{}.WriteJSON(rw)
+		// Error{Error: "リクエストがおかしい"}.WriteJSON(rw)
+		// u.Log.Errorf(ctx, "%+v", failure.New(errors.ErrBadRequest))
 		return
 	}
 	if err := r.ParseForm(); err != nil {
