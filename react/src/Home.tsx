@@ -78,6 +78,9 @@ const Home = () => {
             </a>
           </Space>
         </Row>
+        <Row gutter={16} className={padding}>
+          <Space>2.0.0: APIの最適化、他</Space>
+        </Row>
       </Content>
     </>
   );

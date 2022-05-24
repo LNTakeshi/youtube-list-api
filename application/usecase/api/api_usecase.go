@@ -39,6 +39,12 @@ func RegisterUsecase(m *mux.Router, fsCli *firestore.Client, logger log.Logger, 
 	usecase = &Usecase{FuncName: "/youtube-list/api/youtubelist/sendError", UsecaseBase: base}
 	usecase.HandlerFunc = usecase.SendError
 	usecaseList = append(usecaseList, usecase)
+	usecase = &Usecase{FuncName: "/youtube-list/api/youtubelist/spotifyAuth", UsecaseBase: base}
+	usecase.HandlerFunc = usecase.SpotifyAuth
+	usecaseList = append(usecaseList, usecase)
+	usecase = &Usecase{FuncName: "/youtube-list/api/youtubelist/spotifyRefresh", UsecaseBase: base}
+	usecase.HandlerFunc = usecase.SpotifyRefresh
+	usecaseList = append(usecaseList, usecase)
 	for _, u := range usecaseList {
 		m.Handle(u.FuncName, u.HandlerFunc)
 	}

@@ -34,7 +34,7 @@ type Info struct {
 }
 
 func NewGetList(e *entity.GetList, uuid string, lastUpdateDate time.Time) GetList {
-	if len(e.Data) > 0 && e.Data[len(e.Data)-1].Time.Before(lastUpdateDate) {
+	if len(e.Data) > 0 && e.PrivateInfo.LastUpdateDate.Before(lastUpdateDate) {
 		return GetList{Data: []Data{}, Info: NewInfo(e.Info, false)}
 	}
 	return GetList{

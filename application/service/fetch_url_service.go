@@ -6,11 +6,13 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 	"youtubelist/domain/config/constant"
 	"youtubelist/errors"
 
@@ -18,6 +20,9 @@ import (
 	"github.com/dghubble/oauth1"
 	"github.com/morikuni/failure"
 	"github.com/rickb777/date/period"
+	"github.com/zmb3/spotify/v2"
+	spotifyauth "github.com/zmb3/spotify/v2/auth"
+	"golang.org/x/oauth2/clientcredentials"
 )
 
 type FetchUrlService struct {
@@ -204,6 +209,38 @@ func (s *FetchUrlService) Fetch(ctx context.Context) (*FetchResult, error) {
 			Title:  title,
 			Url:    jsonUrl,
 			Length: length,
+		}, nil
+	case constant.UrlTypeSpotify:
+		apiUrl, err := url.Parse(s.Url)
+		if err != nil {
+			return nil, failure.Wrap(err)
+		}
+		sp := strings.Split(apiUrl.Path, "/")
+		id := spotify.ID(sp[len(sp)-1])
+		ctx := context.Background()
+		config := &clientcredentials.Config{
+			ClientID:     constant.SPOTIFY_CLIENT_ID,
+			ClientSecret: constant.SPOTIFY_CLIENT_SECRET,
+			TokenURL:     spotifyauth.TokenURL,
+		}
+		token, err := config.Token(ctx)
+		if err != nil {
+			log.Fatalf("couldn't get token: %v", err)
+		}
+		httpClient := spotifyauth.New().Client(ctx, token)
+		client := spotify.New(httpClient)
+		track, err := client.GetTrack(ctx, id)
+		if err != nil {
+			log.Fatalf("couldn't get token: %v", err)
+		}
+		artistName := ""
+		if len(track.Artists) > 0 {
+			artistName = track.Artists[0].Name
+		}
+		return &FetchResult{
+			Title:  fmt.Sprintf("%s / %s", track.Name, artistName),
+			Url:    s.Url,
+			Length: int(time.Duration(track.TimeDuration().Seconds())),
 		}, nil
 	}
 	return nil, failure.New(errors.ErrFetchUrl)

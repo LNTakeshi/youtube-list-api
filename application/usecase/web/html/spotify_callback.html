@@ -69,15 +69,8 @@
     <body>
         <div class="flex-center full-height">
             <div class="content">
-                <a href="ytl/">youtube-list</a>
+                <div><p>{{ .RefreshToken }}</p></div>
             </div>
         </div>
     </body>
-    <script>
-$(()=>{
-    $('#submit-button').click(()=>{
-        location.href = $('#room-number').val();
-    });
-});
-    </script>
 </html>

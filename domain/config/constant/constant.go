@@ -12,6 +12,8 @@ const TWITTER_CLIENT_KEY = "grHV1oz4Y3zhznSmfxEdg"
 const TWITTER_CLIENT_SECRET = "BD6Fj3A2MHdcd13iblzUfzrYYsY3leysqhS2gDrSs"
 const TWITTER_CLIENT_ID_ACCESS_TOKEN = "63342875-Yc114gVRVyWsdz06FeGaI2frsjhN5gTdb3WvSpGAV"
 const TWITTER_CLIENT_ID_ACCESS_TOKEN_SECRET = "MSY3lnc095Vu2qH3R9WIOej6ayJbMEDdFnMT7p9VviE4I"
+const SPOTIFY_CLIENT_ID = "f4801f15efcd49e3bebf00e086cddfed"
+const SPOTIFY_CLIENT_SECRET = "2f4fb3692c5d432d9c156f1e9ce53b63"
 
 type UrlType int
 
@@ -21,6 +23,7 @@ const (
 	UrlTypeNicoNico
 	UrlTypeSoundCloud
 	UrlTypeTwitter
+	UrlTypeSpotify
 )
 
 func NewUrlType(Url string) (string, UrlType, error) {
@@ -36,6 +39,9 @@ func NewUrlType(Url string) (string, UrlType, error) {
 		return Url, UrlTypeSoundCloud, nil
 	case strings.HasPrefix(Url, "https://twitter.com/"):
 		return Url, UrlTypeTwitter, nil
+	case strings.HasPrefix(Url, "https://open.spotify.com/track/"):
+		return Url, UrlTypeSpotify, nil
+		// return "", UrlTypeUnknown, failure.New(errors.ErrBadUrl)
 	}
 	return "", UrlTypeUnknown, failure.New(errors.ErrBadUrl)
 }
