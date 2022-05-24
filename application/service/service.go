@@ -92,7 +92,7 @@ func (s *Service) createRoom(ctx context.Context, t *firestore.Transaction) (*en
 	return getList, nil
 }
 
-func (s *Service) Add(ctx context.Context, fetchResult *FetchResult, username string, startStr string, endStr string) error {
+func (s *Service) Add(ctx context.Context, fetchResult *entity.FetchResult, username string, startStr string, endStr string) error {
 	startTime, err := time.Parse("15:04:05", startStr)
 	if err != nil {
 		return failure.New(errors.ErrInvalidTime)
@@ -145,6 +145,7 @@ func (s *Service) Add(ctx context.Context, fetchResult *FetchResult, username st
 
 		getList.Data = append(getList.Data, e)
 		getList.PrivateInfo.SenderUUIDArray = append(getList.PrivateInfo.SenderUUIDArray, s.uUID)
+		getList.PrivateInfo.LastUpdateDate = time.Now()
 
 		txErr = t.Set(s.fsCli.Collection("Room").Doc(s.roomID), getList)
 		if txErr != nil {
@@ -178,6 +179,8 @@ func (s *Service) Remove(ctx context.Context, indexStr string) error {
 			return failure.New(errors.ErrBadRequest)
 		}
 		getList.Data[index].Deleted = true
+		getList.PrivateInfo.LastUpdateDate = time.Now()
+
 		txErr = t.Set(s.fsCli.Collection("Room").Doc(s.roomID), getList)
 		if txErr != nil {
 			return failure.Wrap(txErr)
@@ -210,6 +213,7 @@ func (s *Service) SetCurrentIndex(ctx context.Context, indexStr string) error {
 			return failure.New(errors.ErrBadRequest)
 		}
 		getList.Info.CurrentIndex = index
+		getList.PrivateInfo.LastUpdateDate = time.Now()
 		txErr = t.Set(s.fsCli.Collection("Room").Doc(s.roomID), getList)
 		if txErr != nil {
 			return failure.Wrap(txErr)

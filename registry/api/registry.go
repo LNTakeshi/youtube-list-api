@@ -2,17 +2,14 @@ package api
 
 import (
 	"context"
+	"github.com/gorilla/mux"
 	"net/http"
 	"time"
 	apiusecase "youtubelist/application/usecase/api"
 	webusecase "youtubelist/application/usecase/web"
-	"youtubelist/domain/config"
-	"youtubelist/util/log"
+	"youtubelist/infra/keystore/secretmanager"
+	"youtubelist/util/gcpconfig"
 
-	"github.com/go-redis/redis/v8"
-	"github.com/gorilla/mux"
-
-	"cloud.google.com/go/firestore"
 	"github.com/glassonion1/logz"
 	"github.com/glassonion1/logz/middleware"
 )
@@ -23,31 +20,19 @@ func Start() {
 
 	loc, _ := time.LoadLocation("Asia/Tokyo")
 	time.Local = loc
-	fsCli, err := firestore.NewClient(ctx, config.ProjectID)
-	if err != nil {
-		panic(err)
-	}
-	rd := redis.NewClient(&redis.Options{
-		Addr:     "redis-14768.c1.asia-northeast1-1.gce.cloud.redislabs.com:14768",
-		Password: "AcaU7b5eRS6x5YL9AOEYVAGkVX5mWrDd",
-		DB:       0,
-		PoolSize: 10,
-	})
 
-	// logger
-	var logger log.Logger
-	if config.IsLocal() {
-		logger = log.NewlocalLogger()
-	} else {
-		logger = log.NewLogger()
-		logz.SetConfig(logz.Config{
-			ProjectID:      config.ProjectID,
-			NeedsAccessLog: false,
-		})
-		logz.InitTracer()
+	secret, err := secretmanager.NewClient(ctx)
+	if err != nil {
+		logz.Errorf(ctx, "%+v", err)
+		return
 	}
-	apiusecase.RegisterUsecase(m, fsCli, logger, rd)
-	webusecase.RegisterUsecase(m, fsCli, logger)
+
+	gcpConfig := gcpconfig.LoadGcpConfig(ctx, secret)
+
+	base := InitUsecaseBase(ctx, gcpConfig)
+
+	apiusecase.RegisterUsecase(m, base)
+	webusecase.RegisterUsecase(m, base)
 	m.HandleFunc("/{RoomID}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id := vars["RoomID"]
@@ -62,5 +47,5 @@ func Start() {
 
 	println("server is running")
 	server := &http.Server{Handler: h, Addr: ":8080"}
-	logger.Criticalf(ctx, "%+v", server.ListenAndServe())
+	base.Log.Criticalf(ctx, "%+v", server.ListenAndServe())
 }

@@ -63,7 +63,7 @@ func (u *Usecase) GetList(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	st := status.NewGetList(getList, uuid, args.LastUpdateDate)
+	st := status.NewGetList(r, getList, uuid, args.LastUpdateDate)
 	res, err := json.Marshal(st)
 	if err != nil {
 		rw.WriteHeader(http.StatusInternalServerError)

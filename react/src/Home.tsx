@@ -78,6 +78,15 @@ const Home = () => {
             </a>
           </Space>
         </Row>
+        <Row gutter={16} className={padding}>
+          <Space direction="vertical" align="center">
+            <div>2.0.0: APIの最適化、他</div>
+            <div>
+              2.1.3: 色々かわった Vcyncを有効無効切り替えられるように
+              Spotifyの画像取得処理の修正
+            </div>
+          </Space>
+        </Row>
       </Content>
     </>
   );

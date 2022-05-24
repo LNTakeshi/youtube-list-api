@@ -18,9 +18,16 @@ import Column from 'antd/lib/table/Column';
 import AntdLink from 'antd/lib/typography/Link';
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 import moment from 'moment';
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, {
+  ReactElement,
+  useContext,
+  useEffect,
+  useRef,
+  useState
+} from 'react';
 import { useCookies } from 'react-cookie';
-import { Link, useMatch, useNavigate } from 'react-router-dom';
+import { SiNiconico, SiSpotify, SiTwitter, SiYoutube } from 'react-icons/si';
+import { Link, useLocation, useMatch, useNavigate } from 'react-router-dom';
 import { ColorContext } from './App';
 import { ChangeColorButton, useChangeColor } from './Home';
 const { Text } = Typography;
@@ -74,6 +81,7 @@ type Data = {
   length: string;
   deleted: boolean;
   removable: boolean;
+  icon: ReactElement;
 };
 type GetResponse = {
   data: Data[];
@@ -108,6 +116,8 @@ const Room = () => {
   if (match == null) {
     navigate(process.env.PUBLIC_URL + '/');
   }
+  const location = useLocation();
+  const forceReload = location.search == '?u';
   const masterIdStr = `master-id-${match!.params.roomId}`;
   const [cookies, setCookie] = useCookies(['name', 'uuid', masterIdStr]);
   const [form] = Form.useForm();
@@ -151,7 +161,11 @@ const Room = () => {
       });
   };
   const getList = () => {
-    if (moment().diff(lastSendTime, 'minute') >= 60 && masterId == undefined) {
+    if (
+      !forceReload &&
+      moment().diff(lastSendTime, 'minute') >= 60 &&
+      masterId == undefined
+    ) {
       setStop(true);
       return;
     }
@@ -210,6 +224,19 @@ const Room = () => {
         moment(),
         'minutes'
       )}分後${calctime.format('(DD日HH:mm頃)')}`;
+
+      res.data.data.forEach((e) => {
+        if (e.url.includes('twitter')) {
+          e.icon = <SiTwitter />;
+        } else if (e.url.includes('youtube')) {
+          e.icon = <SiYoutube />;
+        } else if (e.url.includes('nicovideo')) {
+          e.icon = <SiNiconico />;
+        } else if (e.url.includes('spotify')) {
+          e.icon = <SiSpotify />;
+        }
+      });
+
       d = res.data;
       setData(res.data);
     });
@@ -261,8 +288,7 @@ const Room = () => {
           form={form}
           onFinish={send}
           initialValues={{
-            name: localStorage.getItem('name') ?? '',
-            start: [moment(0).utc(), moment(0).utc()]
+            name: localStorage.getItem('name') ?? ''
           }}
           validateTrigger="onFinish"
         >
@@ -280,7 +306,7 @@ const Room = () => {
                 requiredMark={'optional'}
               >
                 <Input
-                  placeholder="youtube/niconico/twitter"
+                  placeholder="youtube/niconico/twitter/spotify"
                   disabled={sending}
                 />
               </Form.Item>
@@ -297,7 +323,7 @@ const Room = () => {
             </Col>
             <Col span={12}>
               <Form.Item name="start" label="start/end">
-                <TimePicker.RangePicker disabled={sending} />
+                <TimePicker.RangePicker disabled={sending} order={false} />
               </Form.Item>
             </Col>
           </Row>
@@ -427,13 +453,16 @@ const DataTable = (d: {
             </Space>
           )}
         />
-        <Column title="再生時間" dataIndex="length" width="75px" />
+        <Column title="再生時間" dataIndex="length" width="90px" />
         <Column
           title="タイトル"
           dataIndex="title"
           render={(_, r: Data) => (
             <AntdLink href={r.url} target="_blank">
-              {r.title}
+              <Space align="center">
+                <div className={headerCss}>{r.icon}</div>
+                {r.title}
+              </Space>
             </AntdLink>
           )}
         />

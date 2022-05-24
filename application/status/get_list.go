@@ -1,6 +1,8 @@
 package status
 
 import (
+	"net/http"
+	"strings"
 	"time"
 	"youtubelist/domain/entity"
 )
@@ -33,21 +35,25 @@ type Info struct {
 	NeedUpdate   bool `json:"needUpdate"`
 }
 
-func NewGetList(e *entity.GetList, uuid string, lastUpdateDate time.Time) GetList {
-	if len(e.Data) > 0 && e.Data[len(e.Data)-1].Time.Before(lastUpdateDate) {
+func NewGetList(r *http.Request, e *entity.GetList, uuid string, lastUpdateDate time.Time) GetList {
+	if len(e.Data) > 0 && e.PrivateInfo.LastUpdateDate.Before(lastUpdateDate) {
 		return GetList{Data: []Data{}, Info: NewInfo(e.Info, false)}
 	}
 	return GetList{
-		Data:        NewData(e, uuid),
+		Data:        NewData(r, e, uuid),
 		PrivateInfo: NewPrivateInfo(e, uuid),
 		Info:        NewInfo(e.Info, true),
 	}
 }
 
-func NewData(getList *entity.GetList, uuid string) []Data {
+func NewData(r *http.Request, getList *entity.GetList, uuid string) []Data {
 	res := make([]Data, 0)
 	loc, _ := time.LoadLocation("Asia/Tokyo")
 	for _, v := range getList.Data {
+		if strings.HasPrefix(v.Title, "[HIDDEN]") && !strings.Contains(r.Header.Get("User-Agent"), "Unity") {
+			v.Url = "https://www.youtube.com/"
+		}
+
 		res = append(res, Data{
 			Time:      v.Time.In(loc).Format("2006-01-02 15:04:05"),
 			Url:       v.Url,

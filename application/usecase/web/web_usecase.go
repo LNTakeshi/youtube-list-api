@@ -2,27 +2,22 @@ package web
 
 import (
 	"fmt"
+	"github.com/gorilla/mux"
+	"github.com/morikuni/failure"
 	"io/fs"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
+	"youtubelist/application/usecase/util"
 	"youtubelist/errors"
 	"youtubelist/react"
-	"youtubelist/util/log"
-
-	"cloud.google.com/go/firestore"
-	"github.com/gorilla/mux"
-	"github.com/morikuni/failure"
 )
 
 type Usecase struct {
 	FuncName    string
 	HandlerFunc http.HandlerFunc
-	*UsecaseBase
-}
-type UsecaseBase struct {
-	FsCli *firestore.Client
-	Log   log.Logger
+	*util.UsecaseBase
 }
 
 type spaHandler struct {
@@ -36,7 +31,7 @@ type spaHandler struct {
 // file located at the index path on the SPA handler will be served. This
 // is suitable behavior for serving an SPA (single page application).
 func (h spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	r.URL.Path = strings.TrimPrefix(r.URL.Path, "/")
+	r.URL.Path = strings.TrimPrefix(r.URL.Path, "/ytl/")
 	_, err := h.staticFS.Open(r.URL.Path)
 	if err != nil {
 		// file does not exist, serve index.html
@@ -60,13 +55,12 @@ func (h spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// otherwise, use http.FileServer to serve the static dir
+	w.Header().Set("Cache-Control", "public, max-age=7776000")
 	http.FileServer(http.FS(h.staticFS)).ServeHTTP(w, r)
 }
 
-func RegisterUsecase(m *mux.Router, fsCli *firestore.Client, logger log.Logger) {
-	// base := &UsecaseBase{FsCli: fsCli, Log: logger}
-
-	// usecaseList := make([]*Usecase, 0)
+func RegisterUsecase(m *mux.Router, base *util.UsecaseBase) {
+	usecaseList := make([]*Usecase, 0)
 	// usecase := &Usecase{FuncName: "/youtube-list/room/{RoomID}", UsecaseBase: base}
 	// usecase.HandlerFunc = usecase.Room
 	// usecaseList = append(usecaseList, usecase)
@@ -75,17 +69,40 @@ func RegisterUsecase(m *mux.Router, fsCli *firestore.Client, logger log.Logger) 
 	// usecase.HandlerFunc = usecase.Room
 	// usecaseList = append(usecaseList, usecase)
 
-	// usecase = &Usecase{FuncName: "/", UsecaseBase: base}
-	// usecase.HandlerFunc = usecase.Index
-	// usecaseList = append(usecaseList, usecase)
+	usecase := &Usecase{FuncName: "/spotifycallback", UsecaseBase: base}
+	usecase.HandlerFunc = usecase.SpotifyCallback
+	usecaseList = append(usecaseList, usecase)
 
-	// usecase = &Usecase{FuncName: "/youtube-list/", UsecaseBase: base}
-	// usecase.HandlerFunc = usecase.Index
-	// usecaseList = append(usecaseList, usecase)
-	// for _, u := range usecaseList {
-	// 	m.Path(u.FuncName).HandlerFunc(u.HandlerFunc).Methods("GET")
-	// }
+	usecase = &Usecase{FuncName: "/{Num}", UsecaseBase: base}
+	usecase.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id := vars["Num"]
+
+		_, err := strconv.Atoi(id)
+		if err != nil {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		w.Header().Add("Location", "/ytl/"+id)
+		w.WriteHeader(http.StatusTemporaryRedirect)
+	}
+	usecaseList = append(usecaseList, usecase)
+
+	usecase = &Usecase{FuncName: "/youtube-list/myip", UsecaseBase: base}
+	usecase.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
+		s := strings.Split(r.RemoteAddr, ":")
+		w.Write([]byte(fmt.Sprintf("<html><body><div class=\"myip\" id=\"%s\"></div></body></html>", s[0])))
+		w.WriteHeader(http.StatusTemporaryRedirect)
+	}
+	usecaseList = append(usecaseList, usecase)
+
+	usecase = &Usecase{FuncName: "/", UsecaseBase: base}
+	usecase.HandlerFunc = usecase.Index
+	usecaseList = append(usecaseList, usecase)
+	for _, u := range usecaseList {
+		m.Path(u.FuncName).HandlerFunc(u.HandlerFunc).Methods("GET")
+	}
 
 	spa := spaHandler{staticPath: "build", indexPath: "index.html", staticFS: react.Serve()}
-	m.PathPrefix("/").Handler(spa)
+	m.PathPrefix("/ytl").Handler(spa)
 }

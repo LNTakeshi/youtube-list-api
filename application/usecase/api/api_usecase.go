@@ -2,6 +2,11 @@ package api
 
 import (
 	"net/http"
+	"youtubelist/application/niconico"
+	"youtubelist/application/spotify"
+	"youtubelist/application/twitter"
+	"youtubelist/application/usecase/util"
+	"youtubelist/application/youtube"
 	"youtubelist/util/log"
 
 	"cloud.google.com/go/firestore"
@@ -12,17 +17,30 @@ import (
 type Usecase struct {
 	FuncName    string
 	HandlerFunc http.HandlerFunc
-	*UsecaseBase
-}
-type UsecaseBase struct {
-	FsCli *firestore.Client
-	Log   log.Logger
-	Redis *redis.Client
+	*util.UsecaseBase
 }
 
-func RegisterUsecase(m *mux.Router, fsCli *firestore.Client, logger log.Logger, rd *redis.Client) {
-	base := &UsecaseBase{FsCli: fsCli, Log: logger, Redis: rd}
+func NewUsecaseBase(
+	fsCli *firestore.Client,
+	logger log.Logger,
+	rd *redis.Client,
+	twitter twitter.ITwitter,
+	youtube youtube.IYoutube,
+	niconico niconico.INiconico,
+	iSpotify spotify.ISpotify,
+) *util.UsecaseBase {
+	return &util.UsecaseBase{
+		FsCli:    fsCli,
+		Log:      logger,
+		Redis:    rd,
+		Twitter:  twitter,
+		Youtube:  youtube,
+		Niconico: niconico,
+		Spotify:  iSpotify,
+	}
+}
 
+func RegisterUsecase(m *mux.Router, base *util.UsecaseBase) {
 	usecaseList := make([]*Usecase, 0)
 	usecase := &Usecase{FuncName: "/youtube-list/api/youtubelist/getList", UsecaseBase: base}
 	usecase.HandlerFunc = usecase.GetList
@@ -38,6 +56,12 @@ func RegisterUsecase(m *mux.Router, fsCli *firestore.Client, logger log.Logger, 
 	usecaseList = append(usecaseList, usecase)
 	usecase = &Usecase{FuncName: "/youtube-list/api/youtubelist/sendError", UsecaseBase: base}
 	usecase.HandlerFunc = usecase.SendError
+	usecaseList = append(usecaseList, usecase)
+	usecase = &Usecase{FuncName: "/youtube-list/api/youtubelist/spotifyAuth", UsecaseBase: base}
+	usecase.HandlerFunc = usecase.SpotifyAuth
+	usecaseList = append(usecaseList, usecase)
+	usecase = &Usecase{FuncName: "/youtube-list/api/youtubelist/spotifyRefresh", UsecaseBase: base}
+	usecase.HandlerFunc = usecase.SpotifyRefresh
 	usecaseList = append(usecaseList, usecase)
 	for _, u := range usecaseList {
 		m.Handle(u.FuncName, u.HandlerFunc)

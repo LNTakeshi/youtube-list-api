@@ -90,9 +90,9 @@ func (u *Usecase) Send(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	urlService := service.NewFetchUrlService(urlType, url)
+	urlService := service.NewFetchUrlService(u.UsecaseBase)
 
-	fetchResult, err := urlService.Fetch(ctx)
+	fetchResult, err := urlService.Fetch(ctx, urlType, url)
 	if err != nil {
 		Error{Error: "URLが取得できなかった"}.WriteJSON(rw)
 		u.Log.Errorf(ctx, "%+v", failure.Wrap(err))
