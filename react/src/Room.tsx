@@ -6,12 +6,12 @@ import {
   Form,
   Grid,
   Input,
-  notification,
   Row,
   Space,
   Table,
   TimePicker,
-  Typography
+  Typography,
+  notification
 } from 'antd';
 import { Content } from 'antd/lib/layout/layout';
 import Column from 'antd/lib/table/Column';
@@ -439,7 +439,7 @@ const DataTable = (d: {
           dataIndex="username"
           width={useBreakpoint().lg ? '150px' : '75px'}
           render={(text, record: Data, index) => (
-            <Space>
+            <Space style={{ wordBreak: 'break-all' }}>
               {text}
               {record.removable && (
                 <Button
