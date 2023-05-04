@@ -99,7 +99,11 @@ func (u *Usecase) Send(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if args.Title != "" {
-		fetchResult.Title = args.Title
+		if args.Title == "[HIDDEN]" {
+			fetchResult.Title = args.Title + fetchResult.Title
+		} else {
+			fetchResult.Title = args.Title
+		}
 	}
 
 	s := service.NewService(args.RoomID, args.UUID, u.FsCli, u.Redis)

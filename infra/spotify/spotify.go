@@ -66,8 +66,11 @@ func (c *Client) GetAudioInfo(ctx context.Context, urlStr string) (*entity.Fetch
 		c.log.Criticalf(ctx, "couldn't get token: %v", err)
 	}
 	artistName := ""
-	if len(track.Artists) > 0 {
-		artistName = track.Artists[0].Name
+	for i, artist := range track.Artists {
+		if i > 0 {
+			artistName += ", "
+		}
+		artistName += artist.Name
 	}
 	return &entity.FetchResult{
 		Title:  fmt.Sprintf("%s / %s", track.Name, artistName),

@@ -11,7 +11,8 @@ import {
   Table,
   TimePicker,
   Typography,
-  notification
+  notification,
+  Checkbox
 } from 'antd';
 import { Content } from 'antd/lib/layout/layout';
 import Column from 'antd/lib/table/Column';
@@ -137,10 +138,14 @@ const Room = () => {
       end = v.start[1];
     }
     const params = new URLSearchParams();
+    console.log(v);
     params.append('username', v.name ?? '');
     params.append('start', start.format('HH:mm:ss'));
     params.append('end', end.format('HH:mm:ss'));
-    params.append('title', v.title ?? '');
+    params.append(
+      'title',
+      (v.hidden == true ? '[HIDDEN]' : '') + (v.title ?? '')
+    );
     params.append('url', v.url);
     params.append('uuid', cookies.uuid);
     params.append('room_id', match!.params.roomId!);
@@ -148,7 +153,7 @@ const Room = () => {
       .post(`${ROOT()}/youtube-list/api/youtubelist/send`, params)
       .then(() => {
         getList();
-        form.resetFields(['url', 'title', 'start']);
+        form.resetFields(['url', 'title', 'start', 'hidden']);
       })
       .catch((e: AxiosError) => {
         notification['error']({
@@ -294,12 +299,12 @@ const Room = () => {
           validateTrigger="onFinish"
         >
           <Row gutter={16}>
-            <Col span={12}>
+            <Col span={10}>
               <Form.Item name="name" label="名前(空欄可)">
                 <Input maxLength={30} disabled={sending} />
               </Form.Item>
             </Col>
-            <Col span={12}>
+            <Col span={10}>
               <Form.Item
                 name="url"
                 label="URL"
@@ -312,9 +317,18 @@ const Room = () => {
                 />
               </Form.Item>
             </Col>
+            <Col span={4}>
+              <Form.Item
+                name="hidden"
+                label="URLを隠す"
+                valuePropName="checked"
+              >
+                <Checkbox />
+              </Form.Item>
+            </Col>
           </Row>
           <Row gutter={16}>
-            <Col span={12}>
+            <Col span={10}>
               <Form.Item name="title" label="カスタムタイトル">
                 <Input
                   placeholder="未入力の場合はURLから取得"
@@ -322,7 +336,7 @@ const Room = () => {
                 />
               </Form.Item>
             </Col>
-            <Col span={12}>
+            <Col span={14}>
               <Form.Item name="start" label="start/end">
                 <TimePicker.RangePicker disabled={sending} order={false} />
               </Form.Item>
