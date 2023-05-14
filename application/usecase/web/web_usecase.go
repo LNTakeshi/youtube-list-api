@@ -12,6 +12,7 @@ import (
 	"youtubelist/application/usecase/util"
 	"youtubelist/errors"
 	"youtubelist/react"
+	reactddr "youtubelist/react-ddr"
 )
 
 type Usecase struct {
@@ -21,6 +22,7 @@ type Usecase struct {
 }
 
 type spaHandler struct {
+	prefix     string
 	staticPath string
 	indexPath  string
 	staticFS   fs.FS
@@ -31,8 +33,10 @@ type spaHandler struct {
 // file located at the index path on the SPA handler will be served. This
 // is suitable behavior for serving an SPA (single page application).
 func (h spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	r.URL.Path = strings.TrimPrefix(r.URL.Path, "/ytl/")
+	r.URL.Path = strings.TrimPrefix(r.URL.Path, h.prefix)
+	println(r.URL.Path)
 	_, err := h.staticFS.Open(r.URL.Path)
+	println(err)
 	if err != nil {
 		// file does not exist, serve index.html
 		index, err := h.staticFS.Open(h.indexPath)
@@ -103,6 +107,8 @@ func RegisterUsecase(m *mux.Router, base *util.UsecaseBase) {
 		m.Path(u.FuncName).HandlerFunc(u.HandlerFunc).Methods("GET")
 	}
 
-	spa := spaHandler{staticPath: "build", indexPath: "index.html", staticFS: react.Serve()}
-	m.PathPrefix("/ytl").Handler(spa)
+	spa := spaHandler{staticPath: "build", prefix: "/ytl/", indexPath: "index.html", staticFS: react.Serve()}
+	spaDDR := spaHandler{staticPath: "dist", prefix: "/ddr/", indexPath: "index.html", staticFS: reactddr.ServeDDR()}
+	m.PathPrefix(spa.prefix).Handler(spa)
+	m.PathPrefix(spaDDR.prefix).Handler(spaDDR)
 }
