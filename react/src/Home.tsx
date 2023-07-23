@@ -81,13 +81,10 @@ const Home = () => {
         <Row gutter={16} className={padding}>
           <Space direction="vertical" align="center">
             <div>
-              2.1.3: 色々かわった Vcyncを有効無効切り替えられるように
-              Spotifyの画像取得処理の修正
-            </div>
-            <div>
               2.1.4: Spotifyのアーティスト名複数取得に対応
               URLを隠すチェックボックスの追加
             </div>
+            <div>2.2.0: TwitterAPI対応 SoundCloud再対応</div>
           </Space>
         </Row>
       </Content>

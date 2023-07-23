@@ -37,6 +37,7 @@ type PrivateInfo struct {
 	CreateRoomDate  time.Time
 	SenderUUIDArray []string
 	LastUpdateDate  time.Time
+	TTL             time.Time
 }
 
 type Info struct {
@@ -49,6 +50,7 @@ func NewGetList(masterID string) *GetList {
 			MasterID:       masterID,
 			CreateRoomDate: time.Now(),
 			LastUpdateDate: time.Now(),
+			TTL:            time.Now().Add(time.Hour * 24 * 3),
 		},
 		Info: Info{CurrentIndex: -1},
 	}

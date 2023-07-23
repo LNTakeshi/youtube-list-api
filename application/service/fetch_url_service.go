@@ -36,13 +36,12 @@ func (s *FetchUrlService) Fetch(ctx context.Context, urlType constant.UrlType, u
 			return nil, failure.Wrap(err)
 		}
 		return result, nil
-	case constant.UrlTypeTwitter:
-		result, err := s.base.Twitter.GetVideoInfo(urlStr)
+	case constant.UrlTypeSoundCloud, constant.UrlTypeTwitter:
+		result, err := s.base.YtDlp.GetVideoInfo(ctx, urlStr)
 		if err != nil {
 			return nil, failure.Wrap(err)
 		}
 		return result, nil
-
 	case constant.UrlTypeSpotify:
 		result, err := s.base.Spotify.GetAudioInfo(ctx, urlStr)
 		if err != nil {
@@ -50,5 +49,6 @@ func (s *FetchUrlService) Fetch(ctx context.Context, urlType constant.UrlType, u
 		}
 		return result, nil
 	}
+
 	return nil, failure.New(errors.ErrFetchUrl)
 }

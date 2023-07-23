@@ -1,0 +1,20 @@
+# bump: golang /GOLANG_VERSION=([\d.]+)/ docker:golang|^1
+# bump: golang link "Release notes" https://golang.org/doc/devel/release.html
+ARG GOLANG_VERSION=1.20.4
+# bump: yt-dlp /YT_DLP=([\d.-]+)/ https://github.com/yt-dlp/yt-dlp.git|/^\d/|sort
+# bump: yt-dlp link "Release notes" https://github.com/yt-dlp/yt-dlp/releases/tag/$LATEST
+ARG YT_DLP=2023.03.04
+
+FROM golang:$GOLANG_VERSION AS base
+ARG YT_DLP
+
+RUN \
+  curl -L https://github.com/yt-dlp/yt-dlp/releases/download/$YT_DLP/yt-dlp -o /usr/local/bin/yt-dlp && \
+  chmod a+x /usr/local/bin/yt-dlp
+
+FROM base AS dev
+
+FROM base
+WORKDIR /src
+COPY go.* ./
+RUN go mod download

@@ -19,10 +19,10 @@ func InitUsecaseBase(ctx context.Context, cfg *gcpconfig.GcpConfig) *util.Usecas
 	client := provideFireStoreClient(ctx)
 	logger := provideLogger()
 	redisClient := provideRedisClient(cfg)
-	iTwitter := provideTwitter(ctx, cfg)
 	iYoutube := provideYoutube(ctx, cfg)
 	iNiconico := provideNiconico()
 	iSpotify := provideSpotify(cfg, logger)
-	usecaseBase := api.NewUsecaseBase(client, logger, redisClient, iTwitter, iYoutube, iNiconico, iSpotify)
+	iYtDlp := provideYtDlp()
+	usecaseBase := api.NewUsecaseBase(client, logger, redisClient, iYoutube, iNiconico, iSpotify, iYtDlp)
 	return usecaseBase
 }

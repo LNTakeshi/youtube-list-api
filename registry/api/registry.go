@@ -2,8 +2,10 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
+	"os"
 	"time"
 	apiusecase "youtubelist/application/usecase/api"
 	webusecase "youtubelist/application/usecase/web"
@@ -45,7 +47,11 @@ func Start() {
 	// Sets the middleware
 	h := middleware.NetHTTP("tracer name")(m)
 
-	println("server is running")
-	server := &http.Server{Handler: h, Addr: ":8080"}
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	println("server is running:" + port)
+	server := &http.Server{Handler: h, Addr: fmt.Sprintf(":%s", port)}
 	base.Log.Criticalf(ctx, "%+v", server.ListenAndServe())
 }

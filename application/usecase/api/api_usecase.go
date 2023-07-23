@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"youtubelist/application/niconico"
 	"youtubelist/application/spotify"
-	"youtubelist/application/twitter"
 	"youtubelist/application/usecase/util"
 	"youtubelist/application/youtube"
+	yt_dlp "youtubelist/application/yt-dlp"
 	"youtubelist/util/log"
 
 	"cloud.google.com/go/firestore"
@@ -24,19 +24,19 @@ func NewUsecaseBase(
 	fsCli *firestore.Client,
 	logger log.Logger,
 	rd *redis.Client,
-	twitter twitter.ITwitter,
 	youtube youtube.IYoutube,
 	niconico niconico.INiconico,
 	iSpotify spotify.ISpotify,
+	iYtDlp yt_dlp.IYtDlp,
 ) *util.UsecaseBase {
 	return &util.UsecaseBase{
 		FsCli:    fsCli,
 		Log:      logger,
 		Redis:    rd,
-		Twitter:  twitter,
 		Youtube:  youtube,
 		Niconico: niconico,
 		Spotify:  iSpotify,
+		YtDlp:    iYtDlp,
 	}
 }
 

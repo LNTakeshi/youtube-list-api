@@ -7,13 +7,13 @@ import (
 	"github.com/go-redis/redis/v8"
 	"youtubelist/application/niconico"
 	"youtubelist/application/spotify"
-	"youtubelist/application/twitter"
 	"youtubelist/application/youtube"
+	yt_dlp "youtubelist/application/yt-dlp"
 	"youtubelist/domain/config"
 	infraNiconico "youtubelist/infra/niconico"
 	infraSpotify "youtubelist/infra/spotify"
-	infraTwitter "youtubelist/infra/twitter"
 	infraYoutube "youtubelist/infra/youtube"
+	infraYtDlp "youtubelist/infra/yt-dlp"
 	"youtubelist/util/gcpconfig"
 	"youtubelist/util/log"
 )
@@ -49,10 +49,6 @@ func provideRedisClient(cfg *gcpconfig.GcpConfig) *redis.Client {
 	return rd
 }
 
-func provideTwitter(ctx context.Context, cfg *gcpconfig.GcpConfig) twitter.ITwitter {
-	return infraTwitter.NewClient(ctx, cfg.TwitterConfig)
-}
-
 func provideNiconico() niconico.INiconico {
 	return infraNiconico.NewClient()
 }
@@ -63,4 +59,8 @@ func provideYoutube(ctx context.Context, cfg *gcpconfig.GcpConfig) youtube.IYout
 
 func provideSpotify(cfg *gcpconfig.GcpConfig, logger log.Logger) spotify.ISpotify {
 	return infraSpotify.NewClient(cfg.SpotifyConfig, logger)
+}
+
+func provideYtDlp() yt_dlp.IYtDlp {
+	return infraYtDlp.NewClient()
 }

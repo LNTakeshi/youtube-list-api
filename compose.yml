@@ -1,0 +1,16 @@
+version: '3.7'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: infra/youtube-dl/local/Dockerfile
+    command: ["go", "run", "registry/api/run/main.go"]
+    ports:
+      - "8080:8080"
+    volumes:
+      - ~/AppData\Roaming\gcloud\application_default_credentials.json:/home/application_default_credentials.json
+      - ./:/src
+    environment:
+      - local=true
+      - GOOGLE_APPLICATION_CREDENTIALS=/home/application_default_credentials.json

@@ -27,7 +27,13 @@ import React, {
   useState
 } from 'react';
 import { useCookies } from 'react-cookie';
-import { SiNiconico, SiSpotify, SiTwitter, SiYoutube } from 'react-icons/si';
+import {
+  SiNiconico,
+  SiSoundcloud,
+  SiSpotify,
+  SiTwitter,
+  SiYoutube
+} from 'react-icons/si';
 import { Link, useLocation, useMatch, useNavigate } from 'react-router-dom';
 import { ColorContext } from './App';
 import { ChangeColorButton, useChangeColor } from './Home';
@@ -240,6 +246,8 @@ const Room = () => {
           e.icon = <SiNiconico />;
         } else if (e.url.includes('spotify')) {
           e.icon = <SiSpotify />;
+        } else if (e.url.includes('soundcloud')) {
+          e.icon = <SiSoundcloud />;
         }
       });
 

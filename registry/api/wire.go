@@ -16,9 +16,9 @@ func InitUsecaseBase(ctx context.Context, cfg *gcpconfig.GcpConfig) *util.Usecas
 		provideFireStoreClient,
 		provideLogger,
 		provideRedisClient,
-		provideTwitter,
 		provideNiconico,
 		provideYoutube,
-		provideSpotify)
+		provideSpotify,
+		provideYtDlp)
 	return nil
 }

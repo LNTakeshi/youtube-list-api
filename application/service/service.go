@@ -69,6 +69,9 @@ func (s *Service) GetRoom(ctx context.Context) (*entity.GetList, string, error) 
 				return nil, "", failure.Wrap(err)
 			}
 		} else {
+			if err != nil {
+				return nil, "", failure.Wrap(err)
+			}
 			err = mapstructure.Decode(doc.Data(), &getList)
 			if err != nil {
 				return nil, "", failure.Wrap(err)
@@ -146,6 +149,7 @@ func (s *Service) Add(ctx context.Context, fetchResult *entity.FetchResult, user
 		getList.Data = append(getList.Data, e)
 		getList.PrivateInfo.SenderUUIDArray = append(getList.PrivateInfo.SenderUUIDArray, s.uUID)
 		getList.PrivateInfo.LastUpdateDate = time.Now()
+		getList.PrivateInfo.TTL = time.Now().Add(time.Hour * 24 * 3)
 
 		txErr = t.Set(s.fsCli.Collection("Room").Doc(s.roomID), getList)
 		if txErr != nil {

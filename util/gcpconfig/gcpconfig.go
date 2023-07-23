@@ -10,7 +10,6 @@ import (
 type GcpConfig struct {
 	RedisConfig   RedisConfig
 	YoutubeConfig YoutubeConfig
-	TwitterConfig TwitterConfig
 	SpotifyConfig SpotifyConfig
 }
 
@@ -23,19 +22,13 @@ type YoutubeConfig struct {
 	ApiKey string
 }
 
-type TwitterConfig struct {
-	ClientKey                 string
-	ClientSecret              string
-	ClientIdAccessToken       string
-	ClientIdAccessTokenSecret string
-}
-
 type SpotifyConfig struct {
 	ClientId     string
 	ClientSecret string
 }
 
 func LoadGcpConfig(ctx context.Context, secretCli keystore.IKeyStore) *GcpConfig {
+	println("islocal:", config.IsLocal())
 	if config.IsLocal() {
 		// TODO: ローカル環境の場合は環境変数から取ってくるようにしたい
 		return &GcpConfig{
@@ -60,26 +53,6 @@ func LoadGcpConfig(ctx context.Context, secretCli keystore.IKeyStore) *GcpConfig
 		panic(err)
 	}
 
-	twitterClientKey, err := secretCli.GetSecret(ctx, constant.SecretKeyNameTwitterClientKey)
-	if err != nil {
-		panic(err)
-	}
-
-	twitterClientSecret, err := secretCli.GetSecret(ctx, constant.SecretKeyNameTwitterClientSecret)
-	if err != nil {
-		panic(err)
-	}
-
-	twitterClientIdAccessToken, err := secretCli.GetSecret(ctx, constant.SecretKeyNameTwitterClientIdAccessToken)
-	if err != nil {
-		panic(err)
-	}
-
-	twitterClientIdAccessTokenSecret, err := secretCli.GetSecret(ctx, constant.SecretKeyNameTwitterClientIdAccessTokenSecret)
-	if err != nil {
-		panic(err)
-	}
-
 	spotifyClientId, err := secretCli.GetSecret(ctx, constant.SecretKeyNameSpotifyClientId)
 	if err != nil {
 		panic(err)
@@ -97,12 +70,6 @@ func LoadGcpConfig(ctx context.Context, secretCli keystore.IKeyStore) *GcpConfig
 		},
 		YoutubeConfig: YoutubeConfig{
 			ApiKey: string(youtubeApiKey),
-		},
-		TwitterConfig: TwitterConfig{
-			ClientKey:                 string(twitterClientKey),
-			ClientSecret:              string(twitterClientSecret),
-			ClientIdAccessToken:       string(twitterClientIdAccessToken),
-			ClientIdAccessTokenSecret: string(twitterClientIdAccessTokenSecret),
 		},
 		SpotifyConfig: SpotifyConfig{
 			ClientId:     string(spotifyClientId),
