@@ -2,9 +2,9 @@ package gcpconfig
 
 import (
 	"context"
+	"os"
 	"youtubelist/application/keystore"
 	"youtubelist/domain/config"
-	"youtubelist/domain/config/constant"
 )
 
 type GcpConfig struct {
@@ -30,7 +30,7 @@ type SpotifyConfig struct {
 func LoadGcpConfig(ctx context.Context, secretCli keystore.IKeyStore) *GcpConfig {
 	println("islocal:", config.IsLocal())
 	if config.IsLocal() {
-		// TODO: ローカル環境の場合は環境変数から取ってくるようにしたい
+		// TODO: ローカル環境の場合は未検討
 		return &GcpConfig{
 			RedisConfig: RedisConfig{
 				Addr:     "localhost:6379",
@@ -38,42 +38,18 @@ func LoadGcpConfig(ctx context.Context, secretCli keystore.IKeyStore) *GcpConfig
 			},
 		}
 	}
-	redisAddr, err := secretCli.GetSecret(ctx, constant.SecretKeyNameRedisAddr)
-	if err != nil {
-		panic(err)
-	}
-
-	redisPassword, err := secretCli.GetSecret(ctx, constant.SecretKeyNameRedisPassword)
-	if err != nil {
-		panic(err)
-	}
-
-	youtubeApiKey, err := secretCli.GetSecret(ctx, constant.SecretKeyNameYoutubeApiKey)
-	if err != nil {
-		panic(err)
-	}
-
-	spotifyClientId, err := secretCli.GetSecret(ctx, constant.SecretKeyNameSpotifyClientId)
-	if err != nil {
-		panic(err)
-	}
-
-	spotifyClientSecret, err := secretCli.GetSecret(ctx, constant.SecretKeyNameSpotifyClientSecret)
-	if err != nil {
-		panic(err)
-	}
 
 	cfg := &GcpConfig{
 		RedisConfig: RedisConfig{
-			Addr:     string(redisAddr),
-			Password: string(redisPassword),
+			Addr:     os.Getenv("REDIS_ADDR"),
+			Password: os.Getenv("REDIS_PASSWORD"),
 		},
 		YoutubeConfig: YoutubeConfig{
-			ApiKey: string(youtubeApiKey),
+			ApiKey: os.Getenv("YOUTUBE_API_KEY"),
 		},
 		SpotifyConfig: SpotifyConfig{
-			ClientId:     string(spotifyClientId),
-			ClientSecret: string(spotifyClientSecret),
+			ClientId:     os.Getenv("SPOTIFY_CLIENT_ID"),
+			ClientSecret: os.Getenv("SPOTIFY_CLIENT_SECRET"),
 		},
 	}
 
