@@ -11,7 +11,7 @@ ARG YT_DLP
 WORKDIR /src
 
 RUN \
-  curl -L https://github.com/LNTakeshi/yt-dlp/releases/download/2023.07.02/yt-dlp_linux -o /usr/local/bin/yt-dlp && \
+  curl -L https://github.com/LNTakeshi/yt-dlp/releases/download/2023.08.25/yt-dlp_linux -o /usr/local/bin/yt-dlp && \
   chmod a+x /usr/local/bin/yt-dlp
 
 COPY . ./
